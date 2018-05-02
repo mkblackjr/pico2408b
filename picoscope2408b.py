@@ -61,7 +61,7 @@ from device import Device
 from clockwork import clockwork
 from error_codes import ERROR_CODES
 
-from process_data import *
+from pico_process_data import *
 
 # Module-level variables
 LOOP_FREQ = 1 # Hz
