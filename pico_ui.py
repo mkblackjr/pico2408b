@@ -78,7 +78,7 @@ class PicoscopeGUI(tk.Frame):
         self.a.autoscale(True)
         f.subplots_adjust(left=0,right=1,bottom=0,top=1)
         data = {'time':np.linspace(0,self._picoscope._sampling_duration,self._picoscope._samples),
-                'data':np.array([np.linspace(-1.1,1.1,self._picoscope._samples),
+                'data':np.array([np.linspace(-1.1,5,self._picoscope._samples),
                                  np.linspace(-0.5,0.5,self._picoscope._samples),
                                  np.linspace(-0.5,0.5,self._picoscope._samples),
                                  np.linspace(-1.1,1.1,self._picoscope._samples)]).reshape(self._picoscope._samples,4)}
@@ -191,7 +191,7 @@ class PicoscopeGUI(tk.Frame):
 
             try:
                 for chan,i in zip(self.plot,range(4)):
-                    chan.set_data(self._picoscope.t,self._picoscope.channel_data[i]/max(self._picoscope.channel_data[i]))
+                    chan.set_data(self._picoscope.t,self._picoscope.channel_data[i])#/max(self._picoscope.channel_data[i]))
                     # xlim(min(self._picoscope.t),max(self._picoscope.t))
                     # ylim(min(self._picoscope.channel_data[i])-1,max(self._picoscope.channel_data[i])+1)
                     # rescale

@@ -206,9 +206,17 @@ class Picoscope2408b(Device):
                     c_float(0)) # 0V offset
                 check_result(m)
 
+                if en:
+                    m = self._lib.ps2000aSetDataBuffer(self._handle,
+                        c_int32(i),  # channel
+                        self._data_buffer[i],
+                        c_int32(self._samples),
+                        c_uint32(0), # segment index
+                        c_int32(0))  # ratio mode
+                    check_result(m)
+
             threshold_v = 3
-            threshold_adc = int(threshold_v * MAX_EXT / self.v_range[-1])
-            print(threshold_adc)
+            threshold_adc = int(threshold_v * MAX_EXT / self.v_range[2])
             m = self._lib.ps2000aSetSimpleTrigger(self._handle,
                 c_int16(1),    # enabled
                 c_int32(2),    # Trigger off Channel C
@@ -273,15 +281,15 @@ class Picoscope2408b(Device):
             #     c_int16(0)) # extIn threshold
             # check_result(m)
 
-            for i in enabled:
-                if i:
-                    m = self._lib.ps2000aSetDataBuffer(self._handle,
-                        c_int32(i),  # channel
-                        self._data_buffer[i],
-                        c_int32(self._samples),
-                        c_uint32(0), # segment index
-                        c_int32(0))  # ratio mode
-                    check_result(m)
+            # for i in enabled:
+            #     if i:
+            #         m = self._lib.ps2000aSetDataBuffer(self._handle,
+            #             c_int32(i),  # channel
+            #             self._data_buffer[i],
+            #             c_int32(self._samples),
+            #             c_uint32(0), # segment index
+            #             c_int32(0))  # ratio mode
+            #         check_result(m)
 
         self._save_thread = Thread(target=self.save,args=(self._save_queue,))
         self._save_thread.daemon = True
@@ -379,7 +387,7 @@ class Picoscope2408b(Device):
                 check_result(m)
 
             # Get Data
-            n_samples = c_uint32(); n_samples.value = self._samples
+            n_samples = c_uint32(); n_samples.value = 3*self._samples
             overflow = c_int16()
             # for i in range(3):
                 # start = i*self._samples
@@ -393,10 +401,10 @@ class Picoscope2408b(Device):
                 byref(overflow)) # flags if channel has gone over voltage
             check_result(m)
 
-            # Error checking
-            if n_samples.value != 3*self._samples:
-                print("Only {} samples collected!".format(n_samples.value))
-            print(overflow.value)
+            # # Error checking
+            # if n_samples.value != 3*self._samples:
+            #     print("Only {} samples collected!".format(n_samples.value))
+            # print(overflow.value)
 
             # Get Trigger Offset
             times = c_int64()
@@ -449,7 +457,7 @@ class Picoscope2408b(Device):
 
                 A = v[0]; B = v[1]; C = v[2]
 
-                a,b,d,override = process_data(self,A,B,C)
+                a,b,d = process_data(self,A,B,C)
 
                 put_queue.put((t,A,B,C,a,b,d,override))
             except:
@@ -513,7 +521,7 @@ class Picoscope2408b(Device):
         return self._t
 
     @property
-    def channel_data(self): 
+    def channel_data(self):
         return self._A_data,self._B_data,self._C_data,self._window_est
 
     @property
