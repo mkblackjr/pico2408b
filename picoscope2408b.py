@@ -35,6 +35,10 @@ Device parent class contains the following public class methods:
     update():           Runs _update_device method on a background thread
 """
 
+###############################################################################
+############################# Header Information ##############################
+###############################################################################
+
 __author__     = "Mitchell Black"
 __copyright__  = "Copyright 2018, Michigan Aerospace Corporation"
 __credits__    = ["Picotech Support", "Picotech Github"]
@@ -44,12 +48,14 @@ __email__      = "mblack@michiganaerospace.com"
 __status__     = "Beta"
 
 import traceback
-import sys
 import numpy as np
 import inspect
 import time
 import csv
 import datetime
+import sys
+sys.path.append('C:\\Users\\kotovlab\\Desktop\\')
+from pico_process_data import *
 
 from ctypes import *
 from multiprocessing import Lock
@@ -61,7 +67,9 @@ from device import Device
 from clockwork import clockwork
 from error_codes import ERROR_CODES
 
-from pico_process_data import *
+###############################################################################
+############################## Module Variables ###############################
+###############################################################################
 
 # Module-level variables
 LOOP_FREQ = 1 # Hz
@@ -82,7 +90,12 @@ CHANNEL_RANGE = [\
                 {"rangeV": 2.0,    "apivalue": 7,  "rangeStr": "2 V"},
                 {"rangeV": 5.0,    "apivalue": 8,  "rangeStr": "5 V"},
                 {"rangeV": 10.0,   "apivalue": 9,  "rangeStr": "10 V"},
-                {"rangeV": 20.0,   "apivalue": 10, "rangeStr": "20 V"}]
+                {"rangeV": 20.0,   "apivalue": 10, "rangeStr": "20 V"}
+                ]
+
+###############################################################################
+############################## Helper Functions ###############################
+###############################################################################
 
 class Picoscope2408b(Device):
     """ Picoscope2408b inherits from the Device class """
