@@ -1,10 +1,9 @@
 """
 Device Parent Class.
 
-This file contains the parent class for all devices within the HALAS, HalasAir,
-and Aeroforecast systems. The Device class acts as a framework for the child 
-devices, whose classes can be simplified to contain only the executions
-specifically pertinent to the individual device.
+he Device class acts as a framework for the child devices, whose classes can
+be simplified to contain only the executions specifically pertinent to the 
+individual device.
 
 Device parent class contains the following class variables:
     _name:              String  - name of device in ALL_CAPS (DEVICE)
