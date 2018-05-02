@@ -177,28 +177,20 @@ class Picoscope2408b(Device):
 
         Returns True if successful.
         """
+        enabled = [1,1,1,0]
         self._data = [np.empty(self._samples,dtype=np.int16) for i in range(3)]
         self._data_buffer = [x.ctypes for x in self._data]
         self._timebase = self.get_timebase(self._sampling_time)
-        self.v_rangeAPI = [7,7,7] # 5V range
+        self.v_rangeAPI = [7,7,7,0] # 5V range
         self.v_range = [CHANNEL_RANGE[i]["rangeV"] for i in self.v_rangeAPI]
-        channel_voltages = [2,2,7]
         with self._driver_lock:
-            for i,v in zip(range(3),self.v_rangeAPI):  # three active channels
+            for i,v,en in zip(range(4),self.v_rangeAPI,enabled):  # three active channels
                 m = self._lib.ps2000aSetChannel(self._handle,
                     c_int32(i), # channel
-                    c_int16(1), # enabled
+                    c_int16(en), # enabled
                     c_int32(1), # DC coupling
                     c_int32(v), # voltage range (API value)
                     c_float(0)) # 0V offset
-                check_result(m)
-
-                m = self._lib.ps2000aSetDataBuffer(self._handle,
-                    c_int32(i),  # channel
-                    self._data_buffer[i],
-                    c_int32(self._samples),
-                    c_uint32(0), # segment index
-                    c_int32(0))  # ratio mode
                 check_result(m)
 
             threshold_v = 3
@@ -267,6 +259,16 @@ class Picoscope2408b(Device):
             #     c_int32(trigger_source),
             #     c_int16(0)) # extIn threshold
             # check_result(m)
+
+            for i in enabled:
+                if i:
+                    m = self._lib.ps2000aSetDataBuffer(self._handle,
+                        c_int32(i),  # channel
+                        self._data_buffer[i],
+                        c_int32(self._samples),
+                        c_uint32(0), # segment index
+                        c_int32(0))  # ratio mode
+                    check_result(m)
 
         self._save_thread = Thread(target=self.save,args=(self._save_queue,))
         self._save_thread.daemon = True
@@ -366,16 +368,22 @@ class Picoscope2408b(Device):
             # Get Data
             n_samples = c_uint32(); n_samples.value = self._samples
             overflow = c_int16()
-            for i in range(3):
-                start = i*self._samples
-                m = self._lib.ps2000aGetValues(self._handle,
-                    c_uint32(start), # start index
-                    byref(n_samples),
-                    c_uint32(1),     # downsample ratio
-                    c_int32(0),      # downsample ratio mode
-                    c_uint32(0),     # segment index
-                    byref(overflow)) # flags if channel has gone over voltage
-                check_result(m)
+            # for i in range(3):
+                # start = i*self._samples
+            start = 0
+            m = self._lib.ps2000aGetValues(self._handle,
+                c_uint32(start), # start index
+                byref(n_samples),
+                c_uint32(1),     # downsample ratio
+                c_int32(0),      # downsample ratio mode
+                c_uint32(0),     # segment index
+                byref(overflow)) # flags if channel has gone over voltage
+            check_result(m)
+
+            # Error checking
+            if n_samples.value != 3*self._samples:
+                print("Only {} samples collected!".format(n_samples.value))
+            print(overflow.value)
 
             # Get Trigger Offset
             times = c_int64()
@@ -404,9 +412,6 @@ class Picoscope2408b(Device):
         self._A_data = np.array(self._data[0]) * self.v_range[0] / MAX_EXT
         self._B_data = np.array(self._data[1]) * self.v_range[1] / MAX_EXT
         self._C_data = np.array(self._data[2]) * self.v_range[2] / MAX_EXT
-        print("Max A: {}".format(max(self._data[0])))
-        print("Max B: {}".format(max(self._data[1])))
-        print("Max C: {}".format(max(self._C_data)))
         self._t = time_data
 
         # Place data into queue
